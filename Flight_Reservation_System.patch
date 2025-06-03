@@ -1,0 +1,215 @@
+Subject: [PATCH] Flight Reservation System
+---
+Index: src/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/Main.java b/src/Main.java
+new file mode 100644
+--- /dev/null	(date 1748782925795)
++++ b/src/Main.java	(date 1748782925795)
+@@ -0,0 +1,78 @@
++import java.util.*;
++
++public class Main {
++    static List<Flight> flights = new ArrayList<>();
++    public static void main(String[] args) {
++        Scanner sc = new Scanner(System.in);
++        boolean isValid = true;
++
++        flights.add(new Flight("Indigo"));
++        flights.add(new Flight("SpiceJet"));
++
++        while(isValid) {
++            System.out.println("\n--- Flight Reservation System ---");
++            System.out.println("1. Book Ticket");
++            System.out.println("2. Cancel Ticket");
++            System.out.println("3. Print Flight Details");
++            System.out.println("4. Exit");
++            System.out.print("Enter your choice: ");
++            int choice = sc.nextInt();
++            String flightName;
++
++            switch (choice) {
++                case 1 :
++                    System.out.print("Enter flight name (Indigo/SpiceJet): ");
++                    sc.nextLine();
++                    flightName = sc.nextLine();
++                    boolean flag = false;
++                    for(Flight flight : flights) {
++                        if(flight.getFlightName().equals(flightName)) {
++                            flag = true;
++                            flight.displayFlightDetails();
++                            System.out.print("Enter passenger name: ");
++                            String passengerName = sc.nextLine();
++                            System.out.print("Enter passenger age: ");
++                            int age = sc.nextInt();
++                            System.out.print("Enter number of seats to book: ");
++                            int seats = sc.nextInt();
++
++                            String bookingId = flight.bookTickets(passengerName, age, seats);
++                            if(bookingId != null) {
++                                System.out.println("Booking successfully. Your booking ID is: " + bookingId);
++                            }
++                        }
++                    }
++                    if(!flag) System.out.println("Invalid flight name. Please try again.");
++                    break;
++                case 2:
++                    System.out.print("Enter flight name (Indigo/SpiceJet): ");
++                    sc.nextLine();
++                    flightName = sc.nextLine();
++                    System.out.print("Enter booking ID: ");
++                    String bookingId = sc.nextLine();
++                    for(Flight flight : flights) {
++                        if(flight.getFlightName().equals(flightName)) {
++                            flight.cancelBooking(bookingId);
++                        }
++                    }
++                    break;
++                case 3:
++                    System.out.print("Enter flight name (Indigo/SpicyJet): ");
++                    sc.nextLine();
++                    flightName = sc.nextLine();
++                    for(Flight flight : flights) {
++                        if(flight.getFlightName().equals(flightName)) {
++                            flight.displayDetails();
++                        }
++                    }
++                    break;
++                case 4:
++                    System.out.println("Exiting System. Thank You!!");
++                    isValid = false;
++                default:
++                    System.out.println("Invalid choice please try again");
++                    break;
++            }
++        }
++    }
++}
+\ No newline at end of file
+Index: src/Flight.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/Flight.java b/src/Flight.java
+new file mode 100644
+--- /dev/null	(date 1748782925814)
++++ b/src/Flight.java	(date 1748782925814)
+@@ -0,0 +1,69 @@
++import java.util.HashMap;
++import java.util.Map;
++
++public class Flight {
++
++    private final String flightName;
++    private int availableSeats;
++    private int ticketPrice;
++    private int bookingCounter;
++    private final Map<String, Passenger> bookings;
++
++    public Flight(String flightName) {
++        this.flightName = flightName;
++        this.availableSeats = 10;
++        this.ticketPrice = 5000;
++        this.bookings = new HashMap<>();
++        this.bookingCounter = 0;
++    }
++
++    public String bookTickets(String passengerName, int age, int seats) {
++        if(seats <= availableSeats) {
++            bookingCounter++;
++            String bookingId = "T" + bookingCounter;
++            Passenger passenger = new Passenger(bookingId, passengerName, age, seats);
++            bookings.put(bookingId,passenger);
++            availableSeats -= seats;
++            ticketPrice += seats * 200;
++            return bookingId;
++        }
++        else {
++            System.out.println("Booking Failed : Not enough seats are available");
++            return null;
++        }
++    }
++
++    public void cancelBooking(String bookingId) {
++        Passenger passenger = bookings.get(bookingId);
++        if(passenger != null) {
++            int seats = passenger.getSeatsBooked();
++            availableSeats += seats;
++            ticketPrice -= seats * 200;
++            bookings.remove(bookingId);
++            System.out.println("Booking cancelled successfully. Refund issued for " + seats + " seats.");
++        }
++        else {
++            System.out.println("Cancellation failed: Booking ID not found.");
++        }
++    }
++
++    public void displayFlightDetails() {
++        System.out.println("Flight: " + flightName);
++        System.out.println("Available Seats: " + availableSeats);
++        System.out.println("Current Ticket Price: " + ticketPrice);
++    }
++
++    public void displayDetails() {
++        System.out.println("Flight: " + flightName);
++        System.out.println("Available Seats: " + availableSeats);
++        System.out.println("Current Ticket Price: " + ticketPrice);
++        System.out.println("Passengers:");
++        for(Passenger passenger : bookings.values()) {
++            System.out.println(passenger);
++        }
++    }
++
++    public String getFlightName() {
++        return  flightName;
++    }
++}
+Index: src/Passenger.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/Passenger.java b/src/Passenger.java
+new file mode 100644
+--- /dev/null	(date 1748782925805)
++++ b/src/Passenger.java	(date 1748782925805)
+@@ -0,0 +1,35 @@
++public class Passenger {
++    private String bookingId;
++    private String name;
++    private int age;
++    private int seatsBooked;
++
++    public Passenger(String bookingId, String name, int age, int seatsBooked) {
++        this.bookingId = bookingId;
++        this.name = name;
++        this.age = age;
++        this.seatsBooked = seatsBooked;
++    }
++
++    public String getBookingId() {
++        return bookingId;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public int getAge() {
++        return age;
++    }
++
++    public int getSeatsBooked() {
++        return seatsBooked;
++    }
++
++    @Override
++    public String toString() {
++        return "Passenger: BookingId = " + bookingId + ", name = " + name + ", age = " + age + ", seatBooked = " + seatsBooked;
++
++    }
++}
